@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ProfessorController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StudentController;
@@ -24,3 +25,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::resource("roles", RoleController::class);
 Route::resource("professors", ProfessorController::class);
 Route::resource("students", StudentController::class);
+Route::resource("courses", CourseController::class);
