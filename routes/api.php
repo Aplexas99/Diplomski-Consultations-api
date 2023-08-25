@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfessorController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StudentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,3 +23,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::resource("roles", RoleController::class);
 Route::resource("professors", ProfessorController::class);
+Route::resource("students", StudentController::class);
