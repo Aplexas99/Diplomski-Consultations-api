@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\ChatRoomController;
+use App\Http\Controllers\ConsultationRequestController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ProfessorController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,3 +29,6 @@ Route::resource("roles", RoleController::class);
 Route::resource("professors", ProfessorController::class);
 Route::resource("students", StudentController::class);
 Route::resource("courses", CourseController::class);
+Route::resource("schedules", ScheduleController::class);
+Route::resource("consultation_requests", ConsultationRequestController::class);
+Route::resource("chat_rooms", ChatRoomController::class);

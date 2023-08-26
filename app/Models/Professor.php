@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Course;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,5 +16,13 @@ class Professor extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function courses()
+    {
+        return $this->hasMany(Course::class);
+    }
 
+    public function consultationSchedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
 }
