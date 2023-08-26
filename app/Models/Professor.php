@@ -20,9 +20,12 @@ class Professor extends Model
     {
         return $this->hasMany(Course::class);
     }
-
     public function consultationSchedules()
     {
         return $this->hasMany(Schedule::class);
+    }
+    public function chatRooms()
+    {
+        return $this->belongsToMany(ChatRoom::class, 'chat_professor', 'professor_id', 'chat_room_id');
     }
 }

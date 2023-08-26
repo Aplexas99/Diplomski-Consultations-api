@@ -12,4 +12,9 @@ class ChatRoom extends Model
     protected $fillable = [
         'link',
      ];
+
+     public function professors()
+     {
+         return $this->belongsToMany(Professor::class, 'chat_professor', 'chat_room_id', 'professor_id');
+     }
 }

@@ -32,3 +32,15 @@ Route::resource("courses", CourseController::class);
 Route::resource("schedules", ScheduleController::class);
 Route::resource("consultation_requests", ConsultationRequestController::class);
 Route::resource("chat_rooms", ChatRoomController::class);
+
+Route::post('chat-rooms/{chatRoom}/add-professor/{professor}', [ChatRoomController::class, 'addProfessorToChatRoom']);
+Route::post('chat-rooms/{chatRoom}/remove-professor/{professor}', [ChatRoomController::class, 'removeProfessorFromChatRoom']);
+
+Route::post('chat-rooms/{chatRoom}/add-student/{student}', [ChatRoomController::class, 'addStudentToChatRoom']);
+Route::post('chat-rooms/{chatRoom}/remove-student/{student}', [ChatRoomController::class, 'removeStudentFromChatRoom']);
+
+Route::post('courses/{course}/add-professor/{professor}', [CourseController::class, 'addProfessorToCourse']);
+Route::post('courses/{course}/remove-professor/{professor}', [CourseController::class, 'removeProfessorFromCourse']);
+
+Route::post('courses/{course}/add-student/{student}', [CourseController::class, 'addStudentToCourse']);
+Route::post('courses/{course}/remove-student/{student}', [CourseController::class, 'removeStudentFromCourse']);
