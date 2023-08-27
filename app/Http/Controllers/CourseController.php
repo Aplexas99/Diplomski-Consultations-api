@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CourseResource;
 use App\Models\Course;
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
@@ -14,11 +15,28 @@ class CourseController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $courses = Course::all();
-        return $courses;
-    }
+        $perPage = $request->get('per_page') ?? 50;
+        $courses = Course::query();
+
+        /** Filters */
+        if ($request->get('name')) {
+            $courses = $courses->filterByName($request->get('name'));
+        }
+        
+        /** Sorts */
+        if($request->get('sort_by')) {
+            $sortBy = $request->get('sort_by');
+            $sortDirection = $request->get('sort_direction') ? $request->get('sort_direction') : 'asc';
+            if($sortBy == 'name') {
+                $courses = $courses->sortByName($sortDirection);
+            }
+        }
+
+        $courses = $courses->paginate($perPage);
+        return CourseResource::collection($courses);
+    }    
 
     /**
      * Show the form for creating a new resource.

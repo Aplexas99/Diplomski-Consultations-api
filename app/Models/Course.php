@@ -13,4 +13,16 @@ class Course extends Model
         'name',
         'description',
     ];
+
+    /** Sorts */
+    public function scopeSortByName($query, $order = 'asc')
+    {
+        return $query->orderBy('name', $order);
+    }
+
+    /** Filters */
+    public function scopeFilterByName($query, $name)
+    {
+        return $query->where('name', 'like', '%' . $name . '%');
+    }
 }
