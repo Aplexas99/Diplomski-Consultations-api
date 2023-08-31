@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatRoomController;
 use App\Http\Controllers\ConsultationRequestController;
 use App\Http\Controllers\CourseController;
@@ -22,8 +23,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+// login
+Route::post('login', [ AuthController::class, 'login' ]);
+Route::post('send-reset-password-link', [ AuthController::class, 'sendResetPasswordLink' ]);
+Route::post('reset-password', [ AuthController::class, 'resetPassword' ])->name('password.reset');
+
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::post('logout', [ AuthController::class, 'logout' ]);
+    Route::get('user-details', [ UserController::class, 'getLoggedUser' ]);
 });
 
 Route::resource("users", UserController::class);
@@ -53,3 +60,6 @@ Route::delete('courses/{course}/remove-professor/{professor}', [CourseController
 
 Route::post('courses/{course}/add-student/{student}', [CourseController::class, 'addStudentToCourse']);
 Route::delete('courses/{course}/remove-student/{student}', [CourseController::class, 'removeStudentFromCourse']);
+
+
+Route::get('logged-user', [UserController::class, 'getLoggedUser']);

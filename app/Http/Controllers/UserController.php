@@ -88,4 +88,9 @@ class UserController extends Controller
         $user->delete();
         return new UserResource($user);
     }
+
+    public function getLoggedUser(Request $request)
+    {
+        return new UserResource($request->user());
+    }
 }
