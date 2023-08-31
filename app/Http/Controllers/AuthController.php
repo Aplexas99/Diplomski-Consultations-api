@@ -44,9 +44,38 @@ class AuthController extends Controller
         ];
     }
 
+    public function loginAdmin(LoginRequest $request)
+    {
+        $user = User::where('email', $request->data['email_or_username']) 
+            ->orWhere('name', $request->data['email_or_username'])
+            ->first();
+
+        if (!$user || md5($request->data['password']) != $user->password) {
+            throw ValidationException::withMessages([
+                'email_or_username' => [ 'The provided credentials are incorrect.' ],
+            ]);
+        }
+
+        if($user->role->name != 'admin') {
+            throw ValidationException::withMessages([
+                'email_or_username' => [ 'The user is not admin.' ],
+            ]);
+        }
+        $apiToken = $user->createToken('test')->plainTextToken;
+
+        return [
+            'data' => [
+                'admin_api_token' => $apiToken,
+                'user' => new UserResource($user),
+            ],
+        ];
+    }
+
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
+        $request->user()->tokens()->delete();
     }
 
     public function sendResetPasswordLink(NewPasswordRequest $request)

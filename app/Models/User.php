@@ -105,5 +105,10 @@ class User extends Authenticatable
             ->join('roles', 'users.role_id', '=', 'roles.id')
             ->where('roles.name', 'like', '%' . $roleName . '%');
     }
+
+    public function isAdmin()
+    {
+        return $this->role->name == 'Admin';
+    }
     
 }
