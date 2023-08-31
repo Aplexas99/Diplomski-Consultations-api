@@ -37,7 +37,7 @@ class UserController extends Controller
             if($sortBy == 'name') {
                 $users = $users->sortByName($sortDirection);
             }
-            if($sortBy == 'last_name') {
+            if($sortBy == 'last-name') {
                 $users = $users->sortByLastName($sortDirection);
             }
             if($sortBy == 'email') {
@@ -60,7 +60,9 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request)
     {
-        $user = User::create($request->validated());
+        $user = new User($request->validated());
+        $user->password = bcrypt("1234");
+        $user->save();
         return new UserResource($user);
     }
 
@@ -77,6 +79,7 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user)
     {
         $user->update($request->validated());
+
         return new UserResource($user);
     }
 

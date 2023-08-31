@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CourseProfessorResource;
 use App\Http\Resources\CourseResource;
 use App\Models\Course;
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
 use App\Models\CourseProfessor;
 use App\Models\CourseStudent;
+use App\Models\Professor;
+use App\Models\Student;
 use Illuminate\Http\Request;
 
 class CourseController extends Controller
@@ -19,7 +22,7 @@ class CourseController extends Controller
     {
         $perPage = $request->get('per_page') ?? 50;
         $courses = Course::query();
-
+        $courses = $courses->with('professors')->with('students');
         /** Filters */
         if ($request->get('name')) {
             $courses = $courses->filterByName($request->get('name'));
@@ -52,7 +55,7 @@ class CourseController extends Controller
     public function store(StoreCourseRequest $request)
     {
         $course = Course::create($request->validated());
-        return $course;
+        return new CourseResource($course);
     }
 
     /**
@@ -60,7 +63,8 @@ class CourseController extends Controller
      */
     public function show(Course $course)
     {
-        return $course;
+        $course->load('professors')->load('students');
+        return new CourseResource($course);
     }
 
     /**
@@ -77,7 +81,7 @@ class CourseController extends Controller
     public function update(UpdateCourseRequest $request, Course $course)
     {
         $course->update($request->validated());
-        return $course;
+        return new CourseResource($course);
     }
 
     /**
@@ -86,7 +90,7 @@ class CourseController extends Controller
     public function destroy(Course $course)
     {
         $course->delete();
-        return $course;
+        return new CourseResource($course);
     }
 
     public function getStudents(Request $request, int $courseId)
@@ -95,11 +99,11 @@ class CourseController extends Controller
         $students = $course->students;
         return $students;
     }
-    public function addStudentToCourse(Request $request, int $courseId, int $studentId)
+    public function addStudentToCourse(Course $course, Student $student)
     {
         $existingRecord = CourseStudent::where([
-            'course_id' => $courseId,
-            'student_id' => $studentId,
+            'course_id' => $course->id,
+            'student_id' => $student->id,
         ])->first();
 
         if($existingRecord) {
@@ -108,22 +112,14 @@ class CourseController extends Controller
             ], 400);
         }
 
-        CourseStudent::create([
-            'course_id' => $courseId,
-            'student_id' => $studentId,
-        ]);
-        return response()->json([
-            'message' => 'Student added to course',
-        ]);
+        $course->students()->attach($student);
+        return new CourseResource($course);
     }
 
-    public function removeStudentFromCourse(Request $request, int $courseId, int $studentId)
+    public function removeStudentFromCourse(Course $course, Student $student)
     {
-        $course = Course::findOrFail($courseId);
-        $course->students()->detach($studentId);
-        return response()->json([
-            'message' => 'Student removed from course',
-        ]);
+        $course->students()->detach($student->id);
+        return new CourseResource($course);
     }
 
     public function getProfessors(Request $request, int $courseId)
@@ -132,11 +128,11 @@ class CourseController extends Controller
         $professors = $course->professors;
         return $professors;
     }
-    public function addProfessorToCourse(Request $request, int $courseId, int $professorId)
+    public function addProfessorToCourse(Course $course, Professor $professor)
     {
         $existingRecord = CourseProfessor::where([
-            'course_id' => $courseId,
-            'professor_id' => $professorId,
+            'course_id' => $course->id,
+            'professor_id' => $professor->id,
         ])->first();
 
         if($existingRecord) {
@@ -145,21 +141,13 @@ class CourseController extends Controller
             ], 400);
         }
 
-        CourseProfessor::create([
-            'course_id' => $courseId,
-            'professor_id' => $professorId,
-        ]);
-        return response()->json([
-            'message' => 'Professor added to course',
-        ]);
+        $course->professors()->attach($professor);
+        return new CourseResource($course);
     }
 
-    public function removeProfessorFromCourse(Request $request, int $courseId, int $professorId)
+    public function removeProfessorFromCourse(Course $course, Professor $professor)
     {
-        $course = Course::findOrFail($courseId);
-        $course->professors()->detach($professorId);
-        return response()->json([
-            'message' => 'Professor removed from course',
-        ]);
+        $course->professors()->detach($professor->id);
+        return new CourseResource($course);
     }
 }

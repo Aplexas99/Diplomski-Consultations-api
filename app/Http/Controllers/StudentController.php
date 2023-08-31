@@ -2,20 +2,47 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CourseResource;
+use App\Http\Resources\CourseStudentResource;
+use App\Http\Resources\StudentResource;
+use App\Models\Course;
+use App\Models\CourseStudent;
 use App\Models\Student;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
+use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        
-        $students = Student::all();
-        return response()->json($students);
+        $perPage = $request->get('per_page') ?? 50;
+        $students = Student::query();
+        $students = $students->with('user')->with('courses');
+        /** Filters */
+        if($request->get('name')) {
+            $students = $students->filterByName($request->get('name'));
+        }
+        if($request->get('jmbag')) {
+            $students = $students->filterByJmbag($request->get('jmbag'));
+        }
+        /** Sorts */
+        if($request->get('sort_by')) {
+            $sortBy = $request->get('sort_by');
+            $sortDirection = $request->get('sort_direction') ? $request->get('sort_direction') : 'asc';
+            if($sortBy == 'name') {
+                $students = $students->sortByName($sortDirection);
+            }
+            if($sortBy == 'jmbag') {
+                $students = $students->sortByJmbag($sortDirection);
+            }
+        }
+
+        $students = $students->paginate($perPage);
+        return StudentResource::collection($students);
     }
 
     /**
@@ -32,7 +59,7 @@ class StudentController extends Controller
     public function store(StoreStudentRequest $request)
     {
         $student = Student::create($request->all());
-        return response()->json($student);
+        return new StudentResource($student);
     }
 
     /**
@@ -40,7 +67,8 @@ class StudentController extends Controller
      */
     public function show(Student $student)
     {
-        return response()->json($student);
+        $student->load('user')->load('courses');
+        return new StudentResource($student);
     }
 
     /**
@@ -56,8 +84,8 @@ class StudentController extends Controller
      */
     public function update(UpdateStudentRequest $request, Student $student)
     {
-        $student->update($request->all());
-        return response()->json($student);
+        $student->update($request->validated());
+        return new StudentResource($student);
     }
 
     /**
@@ -66,6 +94,52 @@ class StudentController extends Controller
     public function destroy(Student $student)
     {
         $student->delete();
-        return response()->json($student);
+        return new StudentResource($student);
     }
+
+    public function getCourses(Request $request, Student $student)
+    {
+        $perPage = $request->get('per_page') ?? 50;
+        $courses = CourseStudent::query();
+        $courses = $courses->with('course')->with('student');
+        return CourseStudentResource::collection($courses->paginate($perPage));
+        if ($request->get('name')) {
+            $courses = $courses->filterByName($request->get('name'));
+        }
+        
+        /** Sorts */
+        if($request->get('sort_by')) {
+            $sortBy = $request->get('sort_by');
+            $sortDirection = $request->get('sort_direction') ? $request->get('sort_direction') : 'asc';
+            if($sortBy == 'name') {
+                $courses = $courses->sortByName($sortDirection);
+            }
+        }
+
+        return CourseResource::collection($courses);
+    }
+
+    public function addStudentToCourse(Student $student, Course $course)
+    {
+        $existingRecord = CourseStudent::where([
+            'course_id' => $course->id,
+            'student_id' => $student->id,
+        ])->first();
+
+        if($existingRecord) {
+            return response()->json([
+                'message' => 'Student already added to course',
+            ], 400);
+        }
+
+        $student->courses()->attach($course);
+        return new StudentResource($student);
+    }
+
+    public function removeStudentFromCourse(Student $student, Course $course)
+    {
+        $student->courses()->detach($course);
+        return new StudentResource($student);
+    }
+
 }

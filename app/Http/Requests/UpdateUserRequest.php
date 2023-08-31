@@ -25,9 +25,8 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => 'string',
             'last_name' => 'string',
-            'email' => 'email|unique:users,email' . $userId,
-            'password' => 'string|min:4|max:255',
-            'role_id' => 'string|exists:roles,id',
+            'email' => 'email|unique:users,email,' . $userId,
+            'role_id' => 'integer|exists:roles,id',
         ];
     }
 }

@@ -20,6 +20,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'last_name',
         'email',
         'password',
         'role_id',
@@ -87,8 +88,9 @@ class User extends Authenticatable
     /** Filters */
     public function scopeFilterByName($query, $name)
     {
-        return $query->where('name', 'like', '%' . $name . '%');
+        return $query->where('users.name', 'like', '%' . $name . '%');
     }
+    
     public function scopeFilterByLastName($query, $last_name)
     {
         return $query->where('last_name', 'like', '%' . $last_name . '%');
@@ -100,8 +102,8 @@ class User extends Authenticatable
     public function scopeFilterByRole($query, $roleName)
     {
         return $query->select('users.*', 'roles.name AS role_name')
-        ->join('roles', 'users.role_id', '=', 'roles.id')
-        ->where('roles.name', 'like', '%' . $roleName . '%');
+            ->join('roles', 'users.role_id', '=', 'roles.id')
+            ->where('roles.name', 'like', '%' . $roleName . '%');
     }
-
+    
 }

@@ -14,6 +14,15 @@ class Course extends Model
         'description',
     ];
 
+    public function professors()
+    {
+        return $this->belongsToMany(Professor::class, 'course_professor', 'course_id', 'professor_id');
+    }
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'course_student', 'course_id', 'student_id');
+    }
+
     /** Sorts */
     public function scopeSortByName($query, $order = 'asc')
     {
