@@ -38,7 +38,6 @@ Route::group(['middleware' => ['auth:sanctum','admin'], 'prefix' => 'admin'], fu
     Route::post("professors/{professor}/remove-course/{course}", [ProfessorController::class, 'removeCourseFromProfessor']);
     Route::resource("professors", ProfessorController::class);
     
-    Route::get("student/{student}/courses", [StudentController::class, 'getCourses']);
     Route::post("students/{student}/add-course/{course}", [StudentController::class, 'addStudentToCourse']);
     Route::delete("students/{student}/remove-course/{course}", [StudentController::class, 'removeStudentFromCourse']);
     Route::resource("students", StudentController::class);
@@ -64,13 +63,15 @@ Route::group(['middleware' => ['auth:sanctum','admin'], 'prefix' => 'admin'], fu
 
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
-    Route::group(['middleware' => 'professor'], function (){
-        
-    });
-    Route::group(['middleware' => 'student'], function (){
-
-    });
-    Route::post('logout', [ AuthController::class, 'logout' ]);
     Route::get('user-details', [ UserController::class, 'getLoggedUser' ]);
+
+    Route::group(['middleware' => 'professor', 'prefix' => 'professor'], function (){
+     });
+    
+    Route::group(['middleware' => 'student', 'prefix' => 'student'], function (){
+        Route::get("{user}/courses", [StudentController::class, 'getCourses']);
+      });
+    
+    Route::post('logout', [ AuthController::class, 'logout' ]);
 
   });

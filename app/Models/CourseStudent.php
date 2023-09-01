@@ -24,4 +24,20 @@ class CourseStudent extends Model
     {
         return $this->belongsTo(Student::class);
     }
+
+    /** Filters */
+    public function scopeFilterByCourseName($query, $courseName)
+    {
+        return $query->whereHas('course', function ($query) use ($courseName) {
+            return $query->where('name', 'LIKE', '%' . $courseName . '%');
+        });
+    }
+
+    /** Sorts */
+    public function scopeSortByCourseName($query, $sortDirection)
+    {
+        return $query->join('courses', 'courses.id', '=', 'course_student.course_id')
+            ->orderBy('courses.name', $sortDirection)
+            ->select('course_student.*');
+    }
 }

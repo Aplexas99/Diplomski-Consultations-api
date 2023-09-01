@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\CourseResource;
 use App\Http\Resources\CourseStudentResource;
 use App\Http\Resources\StudentResource;
+use App\Http\Resources\UserResource;
 use App\Models\Course;
 use App\Models\CourseStudent;
 use App\Models\Student;
@@ -97,26 +98,31 @@ class StudentController extends Controller
         return new StudentResource($student);
     }
 
-    public function getCourses(Request $request, Student $student)
+    public function getCourses(Request $request)
     {
-        $perPage = $request->get('per_page') ?? 50;
-        $courses = CourseStudent::query();
-        $courses = $courses->with('course')->with('student');
-        return CourseStudentResource::collection($courses->paginate($perPage));
-        if ($request->get('name')) {
-            $courses = $courses->filterByName($request->get('name'));
+        $userId = $request->user;
+        $student = Student::where('user_id', $userId)->first();
+        if(!$student) {
+            return response()->json([
+                'message' => 'Student not found',
+            ], 404);
         }
-        
-        /** Sorts */
-        if($request->get('sort_by')) {
+        $perPage = $request->get('per_page') ?? 50;
+        $courses = CourseStudent::query()->where('student_id', $student->id);
+        $courses = $courses->with('course');
+         if ($request->get('name')) {
+            $courses = $courses->filterByCourseName($request->get('name'));
+        }
+           /** Sorts */
+    if($request->get('sort_by')) {
             $sortBy = $request->get('sort_by');
             $sortDirection = $request->get('sort_direction') ? $request->get('sort_direction') : 'asc';
             if($sortBy == 'name') {
-                $courses = $courses->sortByName($sortDirection);
+                $courses = $courses->sortByCourseName($sortDirection);
             }
         }
 
-        return CourseResource::collection($courses);
+        return CourseStudentResource::collection($courses->paginate($perPage));
     }
 
     public function addStudentToCourse(Student $student, Course $course)
