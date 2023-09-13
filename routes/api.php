@@ -25,12 +25,16 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::get('google/login/url', [GoogleCalendarController::class, 'getAuthUrl']);
+Route::post('google/auth/login', [GoogleCalendarController::class, 'postLogin']);
+
 
 Route::group(['prefix' => 'google-calendar'], function () {
     Route::get('authenticate', [GoogleCalendarController::class, 'authenticate']);
     Route::get('callback', [GoogleCalendarController::class, 'callback']);
     Route::get('events', [GoogleCalendarController::class, 'getEvents']);
 });
+
 
 Route::get('index', function () {
     require_once 'C:\Users\Fujitsu\Desktop\Programiranje\Diplomski\Backend\diplomski-api\vendor\autoload.php';
@@ -128,13 +132,12 @@ Route::group(['middleware' => ['auth:sanctum','admin'], 'prefix' => 'admin'], fu
     Route::post("professors/{professor}/remove-course/{course}", [ProfessorController::class, 'removeCourseFromProfessor']);
     Route::resource("professors", ProfessorController::class);
     
-    Route::get("student/{student}/courses", [StudentController::class, 'getCourses']);
     Route::post("students/{student}/add-course/{course}", [StudentController::class, 'addStudentToCourse']);
     Route::delete("students/{student}/remove-course/{course}", [StudentController::class, 'removeStudentFromCourse']);
     Route::resource("students", StudentController::class);
     Route::resource("courses", CourseController::class);
     Route::resource("schedules", ScheduleController::class);
-    Route::resource("consultation_requests", ConsultationRequestController::class);
+    Route::resource("consultation-requests", ConsultationRequestController::class);
     Route::resource("chat_rooms", ChatRoomController::class);
     
     Route::post('chat-rooms/{chatRoom}/add-professor/{professor}', [ChatRoomController::class, 'addProfessorToChatRoom']);
@@ -151,13 +154,31 @@ Route::group(['middleware' => ['auth:sanctum','admin'], 'prefix' => 'admin'], fu
     
 });
 
+Route::get('google/events', [GoogleCalendarController::class, 'getEvents']);
 
+Route::get('professor/{id}/booked-appointments', [ConsultationRequestController::class, 'getBookedAppointmentsForProfessor']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
+  
+  Route::get("courses", [CourseController::class, 'index']);
+  Route::get('courses/{course}/professors', [CourseController::class, 'getProfessors']);
+  Route::get('courses/{course}', [CourseController::class, 'show']);
+  Route::get("professors", [ProfessorController::class, 'index']);
+  Route::get('professors/{professor}/courses', [ProfessorController::class, 'getCourses']);
+  Route::get('professors/{professor}', [ProfessorController::class, 'show']);
+
+  Route::get("consultation-requests", [ConsultationRequestController::class, 'index']);
+  Route::post('consultation-requests', [ConsultationRequestController::class, 'store']);
     Route::group(['middleware' => 'professor'], function (){
-        
+      Route::get('professor/scheduled', [ConsultationRequestController::class, 'getScheduledConsultationRequestsProfessor']);
+      Route::get('professor/pending', [ConsultationRequestController::class, 'getPendingConsultationRequestsProfessor']);
+      Route::put('consultation-requests/{consultationRequest}/accept', [ConsultationRequestController::class, 'acceptConsultationRequest']);
+      Route::put('consultation-requests/{consultationRequest}/reject', [ConsultationRequestController::class, 'rejectConsultationRequest']);    
     });
     Route::group(['middleware' => 'student'], function (){
+      Route::get('consultation-requests/scheduled', [ConsultationRequestController::class, 'getScheduledConsultationRequests']);
+      Route::get('consultation-requests/pending', [ConsultationRequestController::class, 'getPendingConsultationRequests']);    
+    Route::get("student/courses", [StudentController::class, 'getCourses']);
 
     });
     Route::post('logout', [ AuthController::class, 'logout' ]);
