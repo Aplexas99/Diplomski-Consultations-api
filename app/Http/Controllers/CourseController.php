@@ -99,6 +99,8 @@ class CourseController extends Controller
         $students = $course->students;
         return $students;
     }
+
+
     public function addStudentToCourse(Course $course, Student $student)
     {
         $existingRecord = CourseStudent::where([

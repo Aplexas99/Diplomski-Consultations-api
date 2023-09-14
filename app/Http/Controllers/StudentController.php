@@ -10,6 +10,7 @@ use App\Models\CourseStudent;
 use App\Models\Student;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
@@ -97,28 +98,34 @@ class StudentController extends Controller
         return new StudentResource($student);
     }
 
-    public function getCourses(Request $request, Student $student)
+    public function getCourses(Request $request)
     {
         $perPage = $request->get('per_page') ?? 50;
-        $courses = CourseStudent::query();
-        $courses = $courses->with('course')->with('student');
-        return CourseStudentResource::collection($courses->paginate($perPage));
+        $user = User::find($request->user()->id);
+    
+        // Start building the query
+        $query = $user->student->courses();
+    
+        // Apply filters
         if ($request->get('name')) {
-            $courses = $courses->filterByName($request->get('name'));
+            $query = $query->where('name', 'like', '%' . $request->get('name') . '%');
         }
-        
-        /** Sorts */
-        if($request->get('sort_by')) {
+    
+        // Apply sorting
+        if ($request->get('sort_by')) {
             $sortBy = $request->get('sort_by');
-            $sortDirection = $request->get('sort_direction') ? $request->get('sort_direction') : 'asc';
-            if($sortBy == 'name') {
-                $courses = $courses->sortByName($sortDirection);
+            $sortDirection = $request->get('sort_direction') ?? 'asc';
+            if ($sortBy === 'name') {
+                $query = $query->orderBy('name', $sortDirection);
             }
         }
-
+    
+        // Execute the query and paginate the results
+        $courses = $query->paginate($perPage);
+    
         return CourseResource::collection($courses);
     }
-
+    
     public function addStudentToCourse(Student $student, Course $course)
     {
         $existingRecord = CourseStudent::where([

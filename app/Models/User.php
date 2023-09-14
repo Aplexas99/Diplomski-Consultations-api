@@ -24,6 +24,9 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'provider_id',
+        'provider_name',
+        'google_access_token_json',
     ];
 
     /**
@@ -111,4 +114,14 @@ class User extends Authenticatable
         return $this->role->name == 'Admin';
     }
     
+    public function isProfessor()
+    {
+        return $this->role->name == 'Professor';
+    }
+
+    public function isStudent()
+    {
+        return $this->role->name == 'Student';
+    }
+
 }

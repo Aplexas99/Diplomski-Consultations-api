@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\GoogleCalendarController;
+use App\Models\User;
 use Google\Service\Calendar\Event;
 use Illuminate\Support\Facades\Route;
 
@@ -15,80 +17,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/signin', function () {
-    session_start();
     require_once 'C:\Users\Fujitsu\Desktop\Programiranje\Diplomski\Backend\diplomski-api\vendor\autoload.php';
     if(isset($_GET['code'])){
-        $client = new Google_Client();
-        $client->setAuthConfig('C:\Users\Fujitsu\Desktop\Programiranje\Diplomski\Backend\diplomski-api\storage\app\client_secret.json');
-        $client->addScope(Google_Service_Calendar::CALENDAR);
-        $code = $_GET['code'];
-        $_SESSION['access_token'] = $client->getAccessToken();
-        $client->fetchAccessTokenWithAuthCode($code);
-        return redirect()->away('http://localhost:4200');
+       $code = $_GET['code'];
+        
+        return redirect()->away('http://localhost:8000/api/code?code='.$code.'');
     }
-    else {
-        return 'no code';
-    }
-});
-
-Route::get('/ii', function () {
-    putenv('GOOGLE_APPLICATION_CREDENTIALS='.storage_path('app/google-calendar/service-account-credentials.json').'');
-$client = new Google_Client();
-$client->useApplicationDefaultCredentials();//BUSCARÁ GOOGLE_APLICATION_CREDENTIALS EN LA CONFIGURACION (.ENV)
-$client->addScope(Google_Service_Calendar::CALENDAR);
-
-###Instanciamos el servicio en base a $client
-$service = new Google_Service_Calendar($client);
-##SIEMPRE OBTENDREMOS EL ID DE CALENDARIO
-$calendarId = 'toni_dzoic@hotmail.com';//EL ID DEL CALENDARIO CUANDO COMPARTIMOS Y CONFIGURAMOS UN CALENDARIO DESDE EL PORTAL DE GOOGLE CALENDAR
-####crear
-##VARIABLES
-$title = "Evento 21 de agosto, 22xx";
-$description = "Creado desde Laravel para el 21 de agosto";
-$startDateTime = new \Google\Service\Calendar\EventDateTime();
-$startDateTime->setDateTime(Carbon\Carbon::now()->addDays(1)->addHour());
-$endDateTime =  new \Google\Service\Calendar\EventDateTime();
-$endDateTime->setDateTime(Carbon\Carbon::now()->addDays(1)->addHour()->addMinutes(30));
-##FIN_VARIABLES
-$event = new Google_Service_Calendar_Event();
-//add title, start time, end time, description, location to event and add conference data
-$event->setSummary($title);
-$event->setStart($startDateTime);
-$event->setEnd($endDateTime);
-$event->setDescription($description);
-$event->setLocation('Calle 123, Lima, Perú');
-$event->setConferenceData(new \Google\Service\Calendar\ConferenceData());
-
-//add attendees to event
-$attendee1 = new Google_Service_Calendar_EventAttendee();
-$attendee1->setEmail('toni_dzoic@hotmail.com');
-$attendees = array($attendee1);
-//$event->setAttendees($attendees);
-//set conference type to hangout
-$conference = new \Google\Service\Calendar\ConferenceData();
-$conferenceRequest = new \Google\Service\Calendar\CreateConferenceRequest();
-$conferenceRequest->setRequestId('3whatisup');
-$conferenceSolutionKey = new \Google\Service\Calendar\ConferenceSolutionKey();
-$conferenceSolutionKey->setType("Hangouts");
-$conferenceRequest->setConferenceSolutionKey(
-    $conferenceSolutionKey
-);
-/*
-$e = new Spatie\GoogleCalendar\Event();
-$e->name = "Test";
-$e->description = "Test";
-$e->startDateTime = Carbon\Carbon::now()->addDays(1)->addHour();
-$e->endDateTime = Carbon\Carbon::now()->addDays(1)->addHour()->addMinutes(30);
-$e->addMeetLink();
-$e->save();
-
-$conference->setCreateRequest($conferenceRequest);
-$event->setConferenceData($conference);
-
-//insert event
-$event = $service->events->listEvents($calendarId);
-dd($event);
-});
-*/  
-
+    return redirect()->away('http://localhost:4200');
 });

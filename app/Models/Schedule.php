@@ -10,10 +10,10 @@ class Schedule extends Model
 {
     use HasFactory;
 
+    protected $table = 'schedules';
     protected $fillable = [
-        'day',
-        'start_time',
-        'end_time',
+        'professor_id',
+        'date',
     ];
 
     public function consultationRequests()

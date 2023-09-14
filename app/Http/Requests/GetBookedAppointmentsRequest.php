@@ -4,14 +4,14 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateConsultationRequestRequest extends FormRequest
+class GetBookedAppointmentsRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -21,9 +21,9 @@ class UpdateConsultationRequestRequest extends FormRequest
      */
     public function rules(): array
     {
-        $requestId = $this->route('consultation_request')->id;
         return [
-            'status' => 'required|in:pending,accepted,rejected',
+            'professor_id' => 'required|exists:professors,id',
+            'date' => 'required|date',
         ];
     }
 }

@@ -3,11 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use DateTime;
 use Google\Service\Calendar\CalendarListEntry;
+use Google\Service\Calendar\Event;
+use Google_Service_Calendar_ConferenceData;
+use Google_Service_Calendar_ConferenceSolutionKey;
+use Google_Service_Calendar_CreateConferenceRequest;
+use Google_Service_Calendar_Event;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Google\Client;
 use Google\Service\Calendar;
+use Illuminate\Support\Carbon;
 
 class GoogleCalendarController extends Controller
 {
@@ -18,28 +25,6 @@ class GoogleCalendarController extends Controller
         $this->client = new Client();
         $this->client->setAuthConfig('C:\Users\Fujitsu\Desktop\Programiranje\Diplomski\Backend\diplomski-api\storage\app\client_secret.json');
         $this->client->addScope(Calendar::CALENDAR);
-    }
-
-    public function authenticate()
-    {
-        $authUrl = $this->client->createAuthUrl();
-        return redirect()->away($authUrl);
-    }
-
-    public function callback(Request $request)
-    {
-        if ($request->has('code')) {
-            try {
-                $this->client->authenticate($request->code);
-                $accessToken = $this->client->getAccessToken();
-                session(['access_token' => $accessToken]);
-                return redirect()->route('google-calendar.events');
-            } catch (\Exception $e) {
-                \Log::error('Authentication failed: ' . $e->getMessage());
-                return 'Authentication failed';
-            }
-        }
-        return 'Authentication failed';
     }
 
       /**
@@ -68,6 +53,7 @@ class GoogleCalendarController extends Controller
                 \Google\Service\Oauth2::USERINFO_EMAIL,
                 \Google\Service\Oauth2::OPENID,
                 Calendar::CALENDAR_READONLY,
+                Calendar::CALENDAR_EVENTS,
             ]
         );
         $client->setIncludeGrantedScopes(true);
@@ -102,16 +88,15 @@ class GoogleCalendarController extends Controller
      * Login and register
      * Gets registration data by calling google Oauth2 service
      *
-     * @return JsonResponse
      */
-    public function postLogin(Request $request):JsonResponse
+    public function postLogin(Request $request)
     {
 
         /**
          * Get authcode from the query string
          * Url decode if necessary
          */
-        $authCode = urldecode($request->input('code'));
+        $authCode = urldecode($request->input('auth_code'));
 
         /**
          * Google client
@@ -145,14 +130,11 @@ class GoogleCalendarController extends Controller
         /**
          */
         if (!$user) {
-            $user = User::create([
-                    'provider_id' => $userFromGoogle->id,
-                    'provider_name' => 'google',
-                    'google_access_token_json' => json_encode($accessToken),
-                    'name' => $userFromGoogle->name,
-                    'email' => $userFromGoogle->email,
-                    //'avatar' => $providerUser->picture, // in case you have an avatar and want to use google's
-                ]);
+            $user = User::find(auth()->guard('sanctum')->user()->id);
+            $user->provider_id = $userFromGoogle->id;
+            $user->provider_name = 'google';
+            $user->google_access_token_json = json_encode($accessToken);
+            $user->update();
         }
         /**
          * Save new access token for existing user
@@ -239,4 +221,67 @@ class GoogleCalendarController extends Controller
          */
         return response()->json($results, 200);
     }
+
+    /**
+ * Add a new event to Google Calendar
+ *
+ */
+public function addEvent(Request $request)
+{
+    try {
+        $client = $this->getUserClient();
+        if(!$client){
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        $service = new Calendar($client);
+        $calendarId = 'primary';
+        
+        $formatted_start_hms = Carbon::parse($request->consultation['_startTime'])->format('H:i:s');
+        $formatted_end_hms = Carbon::parse($request->consultation['_endTime'])->format('H:i:s');
+
+        $start_time = new \DateTime($request->consultation['_schedule']['_date'] . ' ' . $formatted_start_hms);
+        $end_time = new \DateTime($request->consultation['_schedule']['_date'] . ' ' . $formatted_end_hms);
+         
+        $formatted_start_time = $start_time->format('Y-m-d\TH:i:sP');
+        $formatted_end_time = $end_time->format('Y-m-d\TH:i:sP');
+
+        $event = new Google_Service_Calendar_Event([
+            'summary' => $request->title,
+            'location' => $request->consultation['_location'],
+            'start' => [
+                'dateTime' => $formatted_start_time,
+                'timeZone' => 'Europe/Zagreb',
+            ],
+            'end' => [
+                'dateTime' => $formatted_end_time,
+                'timeZone' => 'Europe/Zagreb',
+            ],
+            'attendees' => [
+                ['email' => $request->consultation['_student']['_user']['_email']],
+            ],
+            ]);
+
+        if($request->consultation['_type'] == 'ONLINE'){
+            $solution_key = new Google_Service_Calendar_ConferenceSolutionKey();
+            $solution_key->setType("hangoutsMeet");
+            $confrequest = new Google_Service_Calendar_CreateConferenceRequest();
+            $confrequest->setRequestId("Konzultacije");
+            $confrequest->setConferenceSolutionKey($solution_key);
+            $confdata = new Google_Service_Calendar_ConferenceData();
+            $confdata->setCreateRequest($confrequest);
+            $event->setConferenceData($confdata);
+            $createdEvent = $service->events->insert($calendarId, $event, ['conferenceDataVersion' => 1]);
+        }
+        else{
+            $createdEvent = $service->events->insert($calendarId, $event);
+        }
+
+        return $createdEvent;
+    } catch (\Exception $e) {
+        \Log::error('Failed to add event: ' . $e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
 }

@@ -15,10 +15,13 @@ class ConsultationRequest extends Model
         'course_id',
         'schedule_id',
         'status',
-        'reason',
+        'note',
         'start_time',
         'end_time',
         'type',
+        'link',
+        'location',
+        'reason',
     ];
 
     public function student()

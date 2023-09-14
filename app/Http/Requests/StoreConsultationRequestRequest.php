@@ -24,13 +24,11 @@ class StoreConsultationRequestRequest extends FormRequest
         return [
             'student_id' => 'required|exists:students,id',
             'professor_id' => 'required|exists:professors,id',
-            'course_id' => 'required|exists:courses,id',
-            'schedule_id' => 'required|exists:schedules,id',
             'status' => 'required|in:pending,accepted,rejected',
-            'reason' => 'nullable',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time',
-            'type' => 'required|in:online,in person',
+            'note' => 'nullable',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'type' => 'required|in:online,in_person',
         ];
     }
 }
